@@ -1,4 +1,4 @@
-module kusto-dashboards-sync
+module github.com/omeshp/kusto-dashboards-sync
 
 go 1.22.2
 
