@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/omeshp/kusto-dashboards-sync/models"
 	"io"
-	"kusto-dashboards-sync/models"
 	"log"
 	"net/http"
 )
