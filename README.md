@@ -39,7 +39,7 @@ kusto-dashboards-sync pull [dashboard id]
 - Will process template `dashboard.yml` and push updates to the dashboard
 
 ```
-kusto-dashboards-sync push [dashboard id]
+kusto-dashboards-sync push
 ```
 
 If no dashboard id is specified the dashboard to pull/push is picked from `config.yml` file.
