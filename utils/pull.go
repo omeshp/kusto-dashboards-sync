@@ -36,7 +36,7 @@ func ConvertRawDashboardToConcrete(rawDashboard *interface{}) (*models.Dashboard
 	return &dashboard, nil
 }
 
-func PersistDashboardData(dashboardRaw *interface{}, outputYamlPath string) error {
+func PersistDashboardData(dashboardRaw *interface{}, masterDashboard *models.Dashboard, outputYamlPath string) error {
 	if _, err := os.Stat("queries"); !os.IsNotExist(err) {
 		// If the directory exists, delete it
 		err := os.RemoveAll("queries")
@@ -113,6 +113,11 @@ func PersistDashboardData(dashboardRaw *interface{}, outputYamlPath string) erro
 			fmt.Printf("Query saved to file: %s\n", filepath)
 		}
 	}
+
+	// retain id, title, etag from master dashboard
+	dataMap["id"] = masterDashboard.Id
+	dataMap["title"] = masterDashboard.Title
+	dataMap["eTag"] = masterDashboard.ETag
 
 	// Marshal the data back into a YAML string
 	newYamlBytes, err := yaml.Marshal(&dataMap)

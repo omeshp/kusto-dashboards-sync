@@ -67,10 +67,7 @@ func main() {
 		log.Fatalf("Error loading .env file")
 	}
 
-	if dashboardID != "" {
-		fmt.Printf("Overriding with Dashboard ID: %s\n", dashboardID)
-		config.DashboardID = dashboardID
-	}
+	masterDashboardId := config.DashboardID
 
 	// Get the access token from the environment variables
 	accessToken := os.Getenv("ACCESS_TOKEN")
@@ -87,11 +84,19 @@ func main() {
 	}
 
 	if command == "pull" {
-		PullDashboard(config.DashboardID, accessToken, err)
+		if dashboardID == "" {
+			dashboardID = masterDashboardId
+		}
+
+		PullDashboard(masterDashboardId, dashboardID, accessToken, err)
 	}
 
 	if command == "push" {
-		PushDashboard(err, accessToken, config.DashboardID)
+		if dashboardID != "" {
+			PushDashboard(err, accessToken, dashboardID)
+		} else {
+			PushDashboard(err, accessToken, masterDashboardId)
+		}
 	}
 
 }
@@ -149,13 +154,13 @@ func PushDashboard(err error, accessToken string, dashboardId string) {
 
 	dataExplorerClient := dataexplorer.NewDataExplorerClient("https://dashboards.kusto.windows.net/dashboards/", accessToken)
 
-	currentDashboard, err := dataExplorerClient.GetDashboard(dashboardId)
-	if err != nil {
-		log.Fatalf("error updating dashboard: %v", err)
-	}
-
-	dashboardMap := dashboard.(map[string]interface{})
-	dashboardMap["eTag"] = currentDashboard.ETag
+	//currentDashboard, err := dataExplorerClient.GetDashboard(dashboardId)
+	//if err != nil {
+	//	log.Fatalf("error updating dashboard: %v", err)
+	//}
+	//
+	//dashboardMap := dashboard.(map[string]interface{})
+	//dashboardMap["eTag"] = currentDashboard.ETag
 
 	// Call the function to update the dashboard
 	err = dataExplorerClient.UpdateDashboardRaw(dashboardId, &dashboard)
@@ -164,7 +169,7 @@ func PushDashboard(err error, accessToken string, dashboardId string) {
 	}
 }
 
-func PullDashboard(dashboardID string, accessToken string, err error) {
+func PullDashboard(masterDashboardId string, dashboardID string, accessToken string, err error) {
 	dataExplorerClient := dataexplorer.NewDataExplorerClient("https://dashboards.kusto.windows.net/dashboards/", accessToken)
 
 	// Get dashboard
@@ -183,8 +188,14 @@ func PullDashboard(dashboardID string, accessToken string, err error) {
 
 	fmt.Printf("Retrieved Dashboard ID: %s, Title: %s\n", dashboardID, dashboard.Title)
 
+	masterDashboard, err := dataExplorerClient.GetDashboard(masterDashboardId)
+	if err != nil {
+		fmt.Printf("Error retrieving dashboard: %v\n", err)
+		return
+	}
+
 	// Save queries to files
-	err = utils.PersistDashboardData(rawDashboard, Dashboard_Template_Path)
+	err = utils.PersistDashboardData(rawDashboard, masterDashboard, Dashboard_Template_Path)
 	if err != nil {
 		log.Fatalf("error saving queries to files: %v", err)
 	}
